@@ -5,9 +5,7 @@
 * 日志的保存等级可设置
 * 可控制是否打印在终端
 ## 说明
->`#include "alog_printf.h"`  
->
->`alog_printf(level, outputEnable, ...);`  
+>__`alog_printf(level, outputEnable, ...);`__  
 * __level__: 日志等级
     * ALOG_LVL_ASSERT 最高
     * ALOG_LVL_ERROR
