@@ -8,9 +8,18 @@
 >`#include "alog_printf.h"`  
 >
 >`alog_printf(level, outputEnable, ...);`  
->>__level__: 日志等级  
->>__outputEnable__: 打印使能
+* __level__: 日志等级
+    * ALOG_LVL_ASSERT 最高
+    * ALOG_LVL_ERROR
+    * ALOG_LVL_WARN
+    * ALOG_LVL_DEBU
+    * ALOG_LVL_INFOG
+    * ALOG_LVL_CLOSE 关闭
+* __outputEnable__: 打印使能
+    * TURE
+    * FALSE
  
 ### 示例
 >`#include "alog_printf.h"`  
+>
 >`alog_printf(ALOG_LVL_DEBUG, TURE, "this is a test \n");`
