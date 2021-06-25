@@ -13,7 +13,7 @@
     * ALOG_LVL_ERROR
     * ALOG_LVL_WARN
     * ALOG_LVL_DEBU
-    * ALOG_LVL_INFOG
+    * ALOG_LVL_INFO
     * ALOG_LVL_CLOSE 关闭
 * __outputEnable__: 打印使能
     * TURE
