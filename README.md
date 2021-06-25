@@ -8,8 +8,8 @@
 >`#include "alog_printf.h"`  
 >
 >`alog_printf(level, outputEnable, ...);`  
->>level: 日志等级  
->>outputEnable: 打印使能
+>>__level__: 日志等级  
+>>__outputEnable__: 打印使能
  
 ### 示例
 >`#include "alog_printf.h"`  
