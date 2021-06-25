@@ -371,9 +371,6 @@ __res; })
         printed = vsprintf(printf_buf, fmt, args);
         va_end(args);
 
-        if (outputEnable == TURE)
-            puts(printf_buf);
-
         char buf[ALOG_BUF_MAX_SIZE + 200] = {0};
         int g_Count = 0;
 
@@ -396,7 +393,10 @@ __res; })
         sprintf(buf, "[%d-%02d-%02d %02d:%02d:%02d] < %s:%ld> :  ", (1900 + p->tm_year), (1 + p->tm_mon), p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec, func, line); //星期p->tm_wday
         strcat(buf, printf_buf);
         //strcat(buf, "\n");
-
+        
+        if (outputEnable == TURE)
+            puts(buf);
+        
         DIR *dir;
         struct dirent *ptr;
         if ((dir = opendir(ALOG_PATH)) == NULL) //打开日志的文件目录，如果没有则建立
