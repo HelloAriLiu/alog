@@ -2,7 +2,7 @@
  * @Description :  Ari-Log
  * @FilePath: /helper/alog_printf.h
  * @Author:  LR
- * @Date: 2021-06-25 09:55:29
+ * @Date: 2021-06-27 09:35:29
  * *Support thread safety
  */
 
@@ -441,7 +441,7 @@ __res; })
             if (ftell(fp) >= iMax) //如果大小已经超出限制
             {
                 fclose(fp);
-                if (g_Count >= ALOG_MAX_NUM) //如果日志文件的个数达到路限制10个，则按日期进行循环覆盖
+                if (g_Count >= ALOG_MAX_NUM) //如果日志文件的个数达到路限制，则按日期进行循环覆盖
                 {
                     sprintf(logFileName, "%s%s", ALOG_PATH, logFileNameMix);
                     remove(logFileName); //删除最老的一个日志文件
