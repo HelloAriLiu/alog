@@ -1,8 +1,8 @@
 /*
  * @Description :  Ari-Log
- * @FilePath: /helper/alog_printf.h
+ * @FilePath:alog_printf.h
  * @Author:  LR
- * @Date: 2021-06-27 09:35:29
+ * @Date: 
  * *Support thread safety
  */
 
@@ -19,19 +19,14 @@
 #include <fcntl.h>
 #include <stdarg.h>
 #include <pthread.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-    pthread_mutex_t alogMutex = PTHREAD_MUTEX_INITIALIZER;
-
-    typedef enum
-    {
-        FALSE = 0,
-        TURE
-    } _BOOL;
+    static pthread_mutex_t alogMutex = PTHREAD_MUTEX_INITIALIZER;
 
 /* output log's level */
 #define ALOG_LVL_ASSERT 0 //断言-最高日志级别，依次后推
@@ -52,7 +47,7 @@ extern "C"
 /* buffer size for every line's log */
 #define ALOG_BUF_MAX_SIZE 1024
 /*  log-output enable*/
-#define ALOG_OUTPUT_ENABLE TURE
+#define ALOG_OUTPUT_ENABLE true
 
 #define alog_printf(level, outputEnable, ...) log_printf(level, outputEnable, __FUNCTION__, __LINE__, __VA_ARGS__)
 
@@ -80,8 +75,7 @@ __res; })
         return i;
     }
 
-    static char *number(char *str, long num, int base, int size, int precision,
-                        int type)
+    static char *number(char *str, long num, int base, int size, int precision, int type)
     {
         /* we are called with base 8, 10 or 16, only, thus don't need "G..." */
         static const char digits[17] = "0123456789ABCDEF"; /* "GHIJKLMNOPQRSTUVWXYZ"; */
@@ -161,191 +155,6 @@ __res; })
         return str;
     }
 
-    int vsprintf(char *buf, const char *fmt, va_list args)
-    {
-        int len;
-        unsigned long num;
-        int i, base;
-        char *str;
-        const char *s;
-
-        int flags; /* flags to number() */
-
-        int field_width; /* width of output field */
-        int precision;   /* min. # of digits for integers; max
-                 number of chars for from string */
-        int qualifier;   /* 'h', 'l', or 'L' for integer fields */
-
-        for (str = buf; *fmt; ++fmt)
-        {
-            if (*fmt != '%')
-            {
-                *str++ = *fmt;
-                continue;
-            }
-
-            /* process flags */
-            flags = 0;
-        repeat:
-            ++fmt; /* this also skips first '%' */
-            switch (*fmt)
-            {
-            case '-':
-                flags |= LEFT;
-                goto repeat;
-            case '+':
-                flags |= PLUS;
-                goto repeat;
-            case ' ':
-                flags |= SPACE;
-                goto repeat;
-            case '#':
-                flags |= SPECIAL;
-                goto repeat;
-            case '0':
-                flags |= ZEROPAD;
-                goto repeat;
-            }
-
-            /* get field width */
-            field_width = -1;
-            if (isdigit(*fmt))
-                field_width = skip_atoi(&fmt);
-            else if (*fmt == '*')
-            {
-                ++fmt;
-                /* it's the next argument */
-                field_width = va_arg(args, int);
-                if (field_width < 0)
-                {
-                    field_width = -field_width;
-                    flags |= LEFT;
-                }
-            }
-
-            /* get the precision */
-            precision = -1;
-            if (*fmt == '.')
-            {
-                ++fmt;
-                if (isdigit(*fmt))
-                    precision = skip_atoi(&fmt);
-                else if (*fmt == '*')
-                {
-                    ++fmt;
-                    /* it's the next argument */
-                    precision = va_arg(args, int);
-                }
-                if (precision < 0)
-                    precision = 0;
-            }
-
-            /* get the conversion qualifier */
-            qualifier = -1;
-            if (*fmt == 'h' || *fmt == 'l' || *fmt == 'L')
-            {
-                qualifier = *fmt;
-                ++fmt;
-            }
-
-            /* default base */
-            base = 10;
-
-            switch (*fmt)
-            {
-            case 'c':
-                if (!(flags & LEFT))
-                    while (--field_width > 0)
-                        *str++ = ' ';
-                *str++ = (unsigned char)va_arg(args, int);
-                while (--field_width > 0)
-                    *str++ = ' ';
-                continue;
-
-            case 's':
-                s = va_arg(args, char *);
-                len = strnlen(s, precision);
-
-                if (!(flags & LEFT))
-                    while (len < field_width--)
-                        *str++ = ' ';
-                for (i = 0; i < len; ++i)
-                    *str++ = *s++;
-                while (len < field_width--)
-                    *str++ = ' ';
-                continue;
-
-            case 'p':
-                if (field_width == -1)
-                {
-                    field_width = 2 * sizeof(void *);
-                    flags |= ZEROPAD;
-                }
-                str = number(str,
-                             (unsigned long)va_arg(args, void *), 16,
-                             field_width, precision, flags);
-                continue;
-
-            case 'n':
-                if (qualifier == 'l')
-                {
-                    long *ip = va_arg(args, long *);
-                    *ip = (str - buf);
-                }
-                else
-                {
-                    int *ip = va_arg(args, int *);
-                    *ip = (str - buf);
-                }
-                continue;
-
-            case '%':
-                *str++ = '%';
-                continue;
-
-                /* integer number formats - set up the flags and "break" */
-            case 'o':
-                base = 8;
-                break;
-
-            case 'x':
-                flags |= SMALL;
-            case 'X':
-                base = 16;
-                break;
-
-            case 'd':
-            case 'i':
-                flags |= SIGN;
-            case 'u':
-                break;
-
-            default:
-                *str++ = '%';
-                if (*fmt)
-                    *str++ = *fmt;
-                else
-                    --fmt;
-                continue;
-            }
-            if (qualifier == 'l')
-                num = va_arg(args, unsigned long);
-            else if (qualifier == 'h')
-            {
-                num = (unsigned short)va_arg(args, int);
-                if (flags & SIGN)
-                    num = (short)num;
-            }
-            else if (flags & SIGN)
-                num = va_arg(args, int);
-            else
-                num = va_arg(args, unsigned int);
-            str = number(str, num, base, field_width, precision, flags);
-        }
-        *str = '\0';
-        return str - buf;
-    }
-
     /**
      * @brief :  Ari日志打印
      * @param {unsigned char} level
@@ -357,7 +166,7 @@ __res; })
      * @author: LR
      * @Date: 2021-06-25 12:11:49
      */
-    void log_printf(unsigned char level, _BOOL outputEnable, const char *func, const long line, const char *fmt, ...)
+    static void log_printf(unsigned char level, bool outputEnable, const char *func, const long line, const char *fmt, ...)
     {
         if (level < ALOG_LVL_SET)
             return;
@@ -393,10 +202,10 @@ __res; })
         sprintf(buf, "[%d-%02d-%02d %02d:%02d:%02d] < %s:%ld> :  ", (1900 + p->tm_year), (1 + p->tm_mon), p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec, func, line); //星期p->tm_wday
         strcat(buf, printf_buf);
         //strcat(buf, "\n");
-        
-        if (outputEnable == TURE)
+
+        if (outputEnable == true)
             puts(buf);
-        
+
         DIR *dir;
         struct dirent *ptr;
         if ((dir = opendir(ALOG_PATH)) == NULL) //打开日志的文件目录，如果没有则建立
@@ -441,7 +250,7 @@ __res; })
             if (ftell(fp) >= iMax) //如果大小已经超出限制
             {
                 fclose(fp);
-                if (g_Count >= ALOG_MAX_NUM) //如果日志文件的个数达到路限制，则按日期进行循环覆盖
+                if (g_Count >= ALOG_MAX_NUM) //如果日志文件的个数达到路限制10个，则按日期进行循环覆盖
                 {
                     sprintf(logFileName, "%s%s", ALOG_PATH, logFileNameMix);
                     remove(logFileName); //删除最老的一个日志文件
