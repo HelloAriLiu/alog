@@ -60,6 +60,7 @@ extern "C"
 #define SMALL 32   /* Must be 32 == 0x20 */
 #define SPECIAL 64 /* 0x */
 
+    
 #define __do_div(n, base) ({ \
 int __res; \
 __res = ((unsigned long) n) % (unsigned) base; \
