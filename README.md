@@ -9,11 +9,11 @@
 ## 说明
 >函数调用：__`alog_printf(level, outputEnable, ...);`__  
 * __level__: 日志等级
-    * ALOG_LVL_ASSERT 最高
-    * ALOG_LVL_ERROR
+    * ALOG_LVL_INFO 
+    * ALOG_LVL_DEBUG
     * ALOG_LVL_WARN
-    * ALOG_LVL_DEBU
-    * ALOG_LVL_INFO
+    * ALOG_LVL_ERROR
+    * ALOG_LVL_ASSERT
     * ALOG_LVL_CLOSE 关闭
 * __outputEnable__: 打印使能
     * TURE
