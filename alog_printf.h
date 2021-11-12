@@ -1,6 +1,6 @@
 /*
  * @Description :  Ari-Log
- * @FilePath:alog_printf.h
+ * @FilePath: /Code/include/alog_printf.h
  * @Author:  LR
  * @Date: 
  * *Support thread safety
@@ -29,27 +29,36 @@ extern "C"
     static pthread_mutex_t alogMutex = PTHREAD_MUTEX_INITIALIZER;
 
 /* output log's level */
-#define ALOG_LVL_ASSERT 0 //断言-最高日志级别，依次后推
-#define ALOG_LVL_ERROR 1
-#define ALOG_LVL_WARN 2
-#define ALOG_LVL_DEBUG 3
-#define ALOG_LVL_INFO 4
+// #define ALOG_LVL_ASSERT 0 //断言-最高日志级别，依次后推
+// #define ALOG_LVL_ERROR 1
+// #define ALOG_LVL_WARN 2
+// #define ALOG_LVL_DEBUG 3
+// #define ALOG_LVL_INFO 4
+// #define ALOG_LVL_CLOSE 255
+
+/* output log's level 日志级别，依次后推*/
+#define ALOG_LVL_INFO 1
+#define ALOG_LVL_DEBUG 2
+#define ALOG_LVL_WARN 3
+#define ALOG_LVL_ERROR 4
+#define ALOG_LVL_ASSERT 5
+
 #define ALOG_LVL_CLOSE 255
 
 /* set log-output level */
-#define ALOG_LVL_SET ALOG_LVL_ASSERT
+#define ALOG_LVL_SET ALOG_LVL_INFO
 /*  set log-output File path*/
 #define ALOG_PATH "./log/"
-/*  set log-output  max mum*/
-#define ALOG_MAX_NUM 5
-/*  set log-output  Single maximum length*/
-#define ALOG_MAX_SIZE 1024 * 100
+/*  set log-output  max mum=10*/
+#define ALOG_MAX_NUM 10
+/*  set log-output  Single maximum size=1M*/
+#define ALOG_MAX_SIZE 1024 * 1024
 /* buffer size for every line's log */
-#define ALOG_BUF_MAX_SIZE 1024
+#define ALOG_BUF_MAX_SIZE 1024 * 5
 /*  log-output enable*/
 #define ALOG_OUTPUT_ENABLE true
 
-#define alog_printf(level, outputEnable, ...) log_printf(level, outputEnable, __FUNCTION__, __LINE__, __VA_ARGS__)
+#define alog_printf(level, outputEnable, ...) log_printf(level, outputEnable, __FILE__, __LINE__, __VA_ARGS__)
 
 /*  */
 #define ZEROPAD 1  /* pad with zero */
@@ -60,7 +69,6 @@ extern "C"
 #define SMALL 32   /* Must be 32 == 0x20 */
 #define SPECIAL 64 /* 0x */
 
-    
 #define __do_div(n, base) ({ \
 int __res; \
 __res = ((unsigned long) n) % (unsigned) base; \
@@ -167,18 +175,18 @@ __res; })
      * @author: LR
      * @Date: 2021-06-25 12:11:49
      */
-    static void log_printf(unsigned char level, bool outputEnable, const char *func, const long line, const char *fmt, ...)
+    static void log_printf(unsigned char level, bool outputEnable, const char *file, const long line, const char *fmt, ...)
     {
         if (level < ALOG_LVL_SET)
             return;
 
         pthread_mutex_lock(&alogMutex); /* 日志部分上锁 */
 
-        char printf_buf[ALOG_BUF_MAX_SIZE];
+        char printf_buf[ALOG_BUF_MAX_SIZE]={0};
         va_list args;
         int printed;
         va_start(args, fmt);
-        printed = vsnprintf(printf_buf,ALOG_BUF_MAX_SIZE, fmt, args);
+        printed = vsnprintf(printf_buf, ALOG_BUF_MAX_SIZE, fmt, args);
         va_end(args);
 
         char buf[ALOG_BUF_MAX_SIZE + 200] = {0};
@@ -200,9 +208,9 @@ __res; })
 
         //将要保存的日志信息和时间戳信息整合
         memset(buf, 0, sizeof(buf));
-        sprintf(buf, "[%d-%02d-%02d %02d:%02d:%02d] < %s:%ld> :  ", (1900 + p->tm_year), (1 + p->tm_mon), p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec, func, line); //星期p->tm_wday
+        sprintf(buf, "▶[%d-%02d-%02d %02d:%02d:%02d -> %s:%ld]  :  ", (1900 + p->tm_year), (1 + p->tm_mon), p->tm_mday, (p->tm_hour + 8) % 24, p->tm_min, p->tm_sec, file, line); //星期p->tm_wday
         strcat(buf, printf_buf);
-        //strcat(buf, "\n");
+        //strcat(buf, "\0");
 
         if (outputEnable == true)
             puts(buf);
@@ -242,7 +250,7 @@ __res; })
         if (fp == NULL)
         {
             //进入这个里面证明没有日志文件产生过，第一次创建+
-            sprintf(logFileName, "%s%d-%02d-%02d_%02d-%02d-%02d.log", ALOG_PATH, (1900 + p->tm_year), (1 + p->tm_mon), p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec);
+            sprintf(logFileName, "%s%d-%02d-%02d_%02d-%02d-%02d.log", ALOG_PATH, (1900 + p->tm_year), (1 + p->tm_mon), p->tm_mday, (p->tm_hour + 8) % 24, p->tm_min, p->tm_sec);
             fp = fopen(logFileName, "w+");
         }
         else
@@ -255,11 +263,11 @@ __res; })
                 {
                     sprintf(logFileName, "%s%s", ALOG_PATH, logFileNameMix);
                     remove(logFileName); //删除最老的一个日志文件
-                    sprintf(logFileName, "%s%d-%02d-%02d_%02d-%02d-%02d.log", ALOG_PATH, (1900 + p->tm_year), (1 + p->tm_mon), p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec);
+                    sprintf(logFileName, "%s%d-%02d-%02d_%02d-%02d-%02d.log", ALOG_PATH, (1900 + p->tm_year), (1 + p->tm_mon), p->tm_mday, (p->tm_hour + 8) % 24, p->tm_min, p->tm_sec);
                 }
                 else
                 {
-                    sprintf(logFileName, "%s%d-%02d-%02d_%02d-%02d-%02d.log", ALOG_PATH, (1900 + p->tm_year), (1 + p->tm_mon), p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec);
+                    sprintf(logFileName, "%s%d-%02d-%02d_%02d-%02d-%02d.log", ALOG_PATH, (1900 + p->tm_year), (1 + p->tm_mon), p->tm_mday, (p->tm_hour + 8) % 24, p->tm_min, p->tm_sec);
                 }
                 fp = fopen(logFileName, "w+");
             }
@@ -270,8 +278,9 @@ __res; })
             }
         }
         fwrite(buf, 1, strlen(buf), fp);
-        fflush(fp);        //立即刷新缓存区到内存
-        fsync(fileno(fp)); //将缓存区数据写入磁盘，并等待操作结束
+        fflush(fp);        //立即刷新缓存区到指定文件流中
+        //fsync(fileno(fp)); //将缓存区数据写入磁盘，并等待操作结束
+        //fdatasync(fileno(fp));
         fclose(fp);
 
         pthread_mutex_unlock(&alogMutex); /*写日志部分解锁 */
